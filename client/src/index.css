@@ -2,27 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'Chirp';
-  src: url('https://abs.twimg.com/fonts/chirp-regular-web.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Chirp';
-  src: url('https://abs.twimg.com/fonts/chirp-medium-web.woff2') format('woff2');
-  font-weight: 500;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Chirp';
-  src: url('https://abs.twimg.com/fonts/chirp-bold-web.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-}
-
 @layer base {
   :root {
     --background: 200 10% 9%;
@@ -63,7 +42,10 @@
   }
 
   body {
-    @apply bg-background text-foreground font-['Chirp'];
+    @apply bg-background text-foreground;
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
