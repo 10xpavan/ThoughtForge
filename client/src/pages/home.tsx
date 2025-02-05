@@ -34,11 +34,12 @@ export default function Home() {
       <Shell>
         <div className="max-w-xl mx-auto text-center space-y-4">
           <pre className="font-mono text-muted-foreground inline-block text-left">
-            {`      _____
-    .;_____;.
-   /_____/_\\\\
-  |[  ]|[  ]|
-  |____|____|
+            {` (｡◕‿◕｡)
+   \\ | /  
+    \\|/   
+  ──○─○──
+     ▽    
+  \\─╰─╯─/
 `}
           </pre>
           <div className="space-y-2">
