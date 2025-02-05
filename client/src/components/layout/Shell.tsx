@@ -19,36 +19,36 @@ export function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border sticky top-0 z-50 backdrop-blur-sm bg-background/80">
-        <div className="container mx-auto px-4 h-14 flex items-center justify-between gap-4">
+        <div className="container mx-auto px-3 h-12 flex items-center justify-between gap-3">
           <Link href="/">
-            <a className="text-xl font-bold text-foreground hover:opacity-80 transition-opacity">
+            <a className="text-base font-bold text-foreground hover:opacity-80 transition-opacity">
               Journal
             </a>
           </Link>
 
-          <form onSubmit={handleSearch} className="flex-1 max-w-md">
+          <form onSubmit={handleSearch} className="flex-1 max-w-sm">
             <div className="relative">
               <Input
                 type="search"
                 placeholder="Search entries..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-muted pl-10"
+                className="w-full bg-muted pl-8 h-8 text-sm"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             </div>
           </form>
 
           <Link href="/new">
-            <Button className="gap-2">
-              <PenSquare className="h-4 w-4" />
-              New Entry
+            <Button size="sm" className="gap-1.5">
+              <PenSquare className="h-3.5 w-3.5" />
+              New
             </Button>
           </Link>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-3 py-4">
         {children}
       </main>
     </div>

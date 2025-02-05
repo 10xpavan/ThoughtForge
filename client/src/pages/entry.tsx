@@ -33,29 +33,31 @@ export default function EntryPage() {
 
   return (
     <Shell>
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="max-w-xl mx-auto space-y-4">
         <Input
           type="text"
           placeholder="Entry title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="text-2xl font-bold"
+          className="text-lg font-medium h-10"
         />
 
         <Editor
           content={content}
           onChange={setContent}
-          className="min-h-[60vh]"
+          className="min-h-[40vh]"
         />
 
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-2">
           <Button
+            size="sm"
             variant="outline"
             onClick={() => setLocation("/")}
           >
             Cancel
           </Button>
           <Button
+            size="sm"
             onClick={() => createEntry.mutate()}
             disabled={!title || !content || createEntry.isPending}
           >

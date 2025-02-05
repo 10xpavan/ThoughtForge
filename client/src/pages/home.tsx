@@ -13,14 +13,14 @@ export default function Home() {
   if (isLoading) {
     return (
       <Shell>
-        <div className="max-w-2xl mx-auto space-y-4">
+        <div className="max-w-xl mx-auto space-y-3">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-6 w-48 bg-muted rounded" />
+              <CardHeader className="py-3">
+                <div className="h-4 w-32 bg-muted rounded" />
               </CardHeader>
-              <CardContent>
-                <div className="h-4 w-full bg-muted rounded" />
+              <CardContent className="py-2">
+                <div className="h-3 w-full bg-muted rounded" />
               </CardContent>
             </Card>
           ))}
@@ -31,19 +31,19 @@ export default function Home() {
 
   return (
     <Shell>
-      <div className="max-w-2xl mx-auto space-y-4">
+      <div className="max-w-xl mx-auto space-y-3">
         {entries?.map((entry) => (
           <Link key={entry.id} href={`/entry/${entry.id}`}>
             <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
-              <CardHeader>
-                <CardTitle className="text-xl">{entry.title}</CardTitle>
-                <p className="text-sm text-muted-foreground">
+              <CardHeader className="py-3">
+                <CardTitle className="text-base">{entry.title}</CardTitle>
+                <p className="text-xs text-muted-foreground">
                   {format(new Date(entry.createdAt), "MMM d, yyyy")}
                 </p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="py-2">
                 <div
-                  className="line-clamp-3 text-muted-foreground"
+                  className="line-clamp-2 text-sm text-muted-foreground"
                   dangerouslySetInnerHTML={{ __html: entry.content }}
                 />
               </CardContent>
