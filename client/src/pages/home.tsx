@@ -33,15 +33,7 @@ export default function Home() {
     return (
       <Shell>
         <div className="max-w-xl mx-auto text-center space-y-4">
-          <pre className="font-mono text-muted-foreground inline-block text-left">
-            {` (｡◕‿◕｡)
-   \\ | /  
-    \\|/   
-  ──○─○──
-     ▽    
-  \\─╰─╯─/
-`}
-          </pre>
+          
           <div className="space-y-2">
             <h2 className="text-lg font-semibold">Welcome to Your Journal</h2>
             <p className="text-sm text-muted-foreground">
