@@ -1,9 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertEntrySchema } from "@shared/schema";
+import { insertEntrySchema, insertTemplateSchema, updatePreferencesSchema } from "@shared/schema";
 
 export function registerRoutes(app: Express): Server {
+  // Entry routes
   app.get("/api/entries", async (_req, res) => {
     const entries = await storage.getEntries();
     res.json(entries);
@@ -44,11 +45,57 @@ export function registerRoutes(app: Express): Server {
     res.status(204).send();
   });
 
-  app.get("/api/prompts", async (_req, res) => {
-    const prompts = await storage.getPrompts();
-    res.json(prompts);
+  // Template routes
+  app.get("/api/templates", async (_req, res) => {
+    const templates = await storage.getTemplates();
+    res.json(templates);
   });
 
+  app.post("/api/templates", async (req, res) => {
+    try {
+      const template = insertTemplateSchema.parse(req.body);
+      const created = await storage.createTemplate(template);
+      res.status(201).json(created);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Invalid request";
+      res.status(400).json({ message });
+    }
+  });
+
+  app.delete("/api/templates/:id", async (req, res) => {
+    await storage.deleteTemplate(Number(req.params.id));
+    res.status(204).send();
+  });
+
+  // Tag routes
+  app.get("/api/tags", async (_req, res) => {
+    const tags = await storage.getTags();
+    res.json(tags);
+  });
+
+  app.get("/api/entries/tag/:tag", async (req, res) => {
+    const entries = await storage.getEntriesByTag(req.params.tag);
+    res.json(entries);
+  });
+
+  // User preferences routes
+  app.get("/api/preferences", async (_req, res) => {
+    const preferences = await storage.getUserPreferences();
+    res.json(preferences);
+  });
+
+  app.patch("/api/preferences", async (req, res) => {
+    try {
+      const updates = updatePreferencesSchema.partial().parse(req.body);
+      const updated = await storage.updateUserPreferences(updates);
+      res.json(updated);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Invalid request";
+      res.status(400).json({ message });
+    }
+  });
+
+  // Search route
   app.get("/api/entries/search/:query", async (req, res) => {
     const entries = await storage.searchEntries(req.params.query);
     res.json(entries);
