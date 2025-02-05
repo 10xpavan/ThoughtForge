@@ -29,6 +29,36 @@ export default function Home() {
     );
   }
 
+  if (!entries?.length) {
+    return (
+      <Shell>
+        <div className="max-w-xl mx-auto text-center space-y-4">
+          <pre className="font-mono text-muted-foreground inline-block text-left">
+            {`      _____
+    .;_____;.
+   /_____/_\\\\
+  |[  ]|[  ]|
+  |____|____|
+`}
+          </pre>
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold">Welcome to Your Journal</h2>
+            <p className="text-sm text-muted-foreground">
+              Start writing your thoughts and tracking your journey.
+            </p>
+            <Link href="/new">
+              <a className="inline-flex">
+                <button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                  Create Your First Entry
+                </button>
+              </a>
+            </Link>
+          </div>
+        </div>
+      </Shell>
+    );
+  }
+
   return (
     <Shell>
       <div className="max-w-xl mx-auto space-y-3">
