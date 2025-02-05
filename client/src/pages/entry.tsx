@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { TagInput } from "@/components/ui/tag-input";
 import { MoodSelector } from "@/components/ui/mood-selector";
 import { Star } from "lucide-react";
+import { VoiceInput } from "@/components/ui/voice-input";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import type { Entry } from "@shared/schema";
@@ -131,6 +132,7 @@ export default function EntryPage() {
             onChange={(e) => setTitle(e.target.value)}
             className="text-lg font-medium h-10 flex-1"
           />
+          <VoiceInput onTranscript={(text) => setContent(content + text)} />
           <Button
             size="icon"
             variant={isFavorite ? "default" : "ghost"}
