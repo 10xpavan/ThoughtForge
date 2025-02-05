@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, jsonb, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -14,6 +14,9 @@ export const entries = pgTable("entries", {
   content: text("content").notNull(),
   isFavorite: boolean("is_favorite").default(false).notNull(),
   tags: text("tags").array().default([]).notNull(),
+  mood: text("mood"),
+  moodIntensity: integer("mood_intensity"),
+  moodNotes: text("mood_notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -38,12 +41,18 @@ export const insertEntrySchema = createInsertSchema(entries)
     content: true,
     isFavorite: true,
     tags: true,
+    mood: true,
+    moodIntensity: true,
+    moodNotes: true,
   })
   .extend({
     title: z.string().min(1).max(100),
     content: z.string().min(1),
     isFavorite: z.boolean().default(false),
     tags: z.array(z.string()).default([]),
+    mood: z.string().optional(),
+    moodIntensity: z.number().min(1).max(5).optional(),
+    moodNotes: z.string().optional(),
   });
 
 // Schema for inserting templates
@@ -74,3 +83,16 @@ export type Entry = typeof entries.$inferSelect;
 export type Template = typeof templates.$inferSelect;
 export type Tag = typeof tags.$inferSelect;
 export type UserPreferences = typeof userPreferences.$inferSelect;
+
+// Mood types
+export const moodOptions = [
+  "happy",
+  "excited",
+  "peaceful",
+  "neutral",
+  "sad",
+  "anxious",
+  "angry",
+] as const;
+
+export type Mood = typeof moodOptions[number];
