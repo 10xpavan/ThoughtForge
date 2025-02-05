@@ -1,4 +1,6 @@
-import { type Entry, type InsertEntry } from "@shared/schema";
+import { type Entry, type InsertEntry, entries } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   getEntries(): Promise<Entry[]>;
@@ -9,53 +11,43 @@ export interface IStorage {
   searchEntries(query: string): Promise<Entry[]>;
 }
 
-export class MemStorage implements IStorage {
-  private entries: Map<number, Entry>;
-  private currentEntryId: number;
-
-  constructor() {
-    this.entries = new Map();
-    this.currentEntryId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getEntries(): Promise<Entry[]> {
-    return Array.from(this.entries.values()).sort((a, b) => 
-      b.createdAt.getTime() - a.createdAt.getTime()
-    );
+    return await db.select().from(entries).orderBy(entries.createdAt);
   }
 
   async getEntry(id: number): Promise<Entry | undefined> {
-    return this.entries.get(id);
+    const [entry] = await db.select().from(entries).where(eq(entries.id, id));
+    return entry;
   }
 
   async createEntry(entry: InsertEntry): Promise<Entry> {
-    const id = this.currentEntryId++;
-    const newEntry: Entry = {
-      ...entry,
-      id,
-      createdAt: new Date(),
-    };
-    this.entries.set(id, newEntry);
-    return newEntry;
+    const [created] = await db.insert(entries).values(entry).returning();
+    return created;
   }
 
   async updateEntry(id: number, entry: Partial<InsertEntry>): Promise<Entry> {
-    const existingEntry = await this.getEntry(id);
-    if (!existingEntry) {
+    const [updated] = await db
+      .update(entries)
+      .set(entry)
+      .where(eq(entries.id, id))
+      .returning();
+
+    if (!updated) {
       throw new Error("Entry not found");
     }
-    const updatedEntry = { ...existingEntry, ...entry };
-    this.entries.set(id, updatedEntry);
-    return updatedEntry;
+
+    return updated;
   }
 
   async deleteEntry(id: number): Promise<void> {
-    this.entries.delete(id);
+    await db.delete(entries).where(eq(entries.id, id));
   }
 
   async searchEntries(query: string): Promise<Entry[]> {
     const lowercaseQuery = query.toLowerCase();
-    return Array.from(this.entries.values()).filter(
+    const results = await db.select().from(entries);
+    return results.filter(
       entry =>
         entry.title.toLowerCase().includes(lowercaseQuery) ||
         entry.content.toLowerCase().includes(lowercaseQuery)
@@ -63,4 +55,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
