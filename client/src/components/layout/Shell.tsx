@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, PenSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useLocation } from "wouter";
@@ -18,32 +18,37 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="border-b border-border sticky top-0 z-50 backdrop-blur-sm bg-background/80">
+        <div className="container mx-auto px-4 h-14 flex items-center justify-between gap-4">
           <Link href="/">
-            <a className="text-2xl font-bold text-primary">Journal</a>
+            <a className="text-xl font-bold text-foreground hover:opacity-80 transition-opacity">
+              Journal
+            </a>
           </Link>
-          
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <Input
-              type="search"
-              placeholder="Search entries..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-64"
-            />
-            <Button type="submit" size="icon" variant="ghost">
-              <Search className="h-4 w-4" />
-            </Button>
+
+          <form onSubmit={handleSearch} className="flex-1 max-w-md">
+            <div className="relative">
+              <Input
+                type="search"
+                placeholder="Search entries..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-muted pl-10"
+              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            </div>
           </form>
 
           <Link href="/new">
-            <Button>New Entry</Button>
+            <Button className="gap-2">
+              <PenSquare className="h-4 w-4" />
+              New Entry
+            </Button>
           </Link>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6">
         {children}
       </main>
     </div>

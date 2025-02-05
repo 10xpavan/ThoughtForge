@@ -13,7 +13,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <Shell>
-        <div className="space-y-4">
+        <div className="max-w-2xl mx-auto space-y-4">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader>
@@ -31,14 +31,14 @@ export default function Home() {
 
   return (
     <Shell>
-      <div className="space-y-4">
+      <div className="max-w-2xl mx-auto space-y-4">
         {entries?.map((entry) => (
           <Link key={entry.id} href={`/entry/${entry.id}`}>
-            <Card className="cursor-pointer hover:border-primary transition-colors">
+            <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
               <CardHeader>
-                <CardTitle>{entry.title}</CardTitle>
+                <CardTitle className="text-xl">{entry.title}</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  {format(new Date(entry.createdAt), "PPP")}
+                  {format(new Date(entry.createdAt), "MMM d, yyyy")}
                 </p>
               </CardHeader>
               <CardContent>

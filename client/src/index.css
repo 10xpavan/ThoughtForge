@@ -2,12 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Chirp';
+  src: url('https://abs.twimg.com/fonts/chirp-regular-web.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Chirp';
+  src: url('https://abs.twimg.com/fonts/chirp-medium-web.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Chirp';
+  src: url('https://abs.twimg.com/fonts/chirp-bold-web.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@layer base {
+  :root {
+    --background: 200 10% 9%;
+    --foreground: 210 20% 98%;
+
+    --card: 200 10% 12%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 200 10% 12%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary: 204 88% 53%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 200 10% 15%;
+    --secondary-foreground: 210 20% 98%;
+
+    --muted: 200 10% 15%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 200 10% 15%;
+    --accent-foreground: 210 20% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 200 10% 20%;
+    --input: 200 10% 20%;
+    --ring: 204 88% 53%;
+
+    --radius: 0.75rem;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply bg-background text-foreground font-['Chirp'];
   }
+}
+
+.prose {
+  @apply text-foreground;
+}
+
+.prose a {
+  @apply text-primary no-underline;
 }
