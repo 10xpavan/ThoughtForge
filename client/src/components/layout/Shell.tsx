@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Search, PenSquare, BarChart2 } from "lucide-react";
+import { Search, PenSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ThemeSwitcher } from "@/components/ui/theme-switcher";
 import { useState } from "react";
