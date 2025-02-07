@@ -44,12 +44,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </form>
 
           <div className="flex items-center gap-2">
-            <Link href="/insights">
-              <Button variant="ghost" size="sm" className="gap-1.5">
-                <BarChart2 className="h-3.5 w-3.5" />
-                Insights
-              </Button>
-            </Link>
             <Link href="/new">
               <Button size="sm" className="gap-1.5">
                 <PenSquare className="h-3.5 w-3.5" />
