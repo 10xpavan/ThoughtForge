@@ -39,15 +39,15 @@ export default function EntryPage() {
     if (entry) {
       setTitle(entry.title);
       setContent(entry.content);
-      setTags(entry.tags);
-      setIsFavorite(entry.isFavorite);
+      setTags(entry.tags || []);
+      setIsFavorite(entry.isFavorite || false);
     } else if (template) {
       setTitle("");
       setContent(template.content);
       setTags([]);
       setIsFavorite(false);
     }
-  }, [entry, template]);
+  }, [entry]);
 
   const createEntry = useMutation({
     mutationFn: async () => {
