@@ -37,8 +37,8 @@ export default function EntryPage() {
   // Set initial values
   useEffect(() => {
     if (entry) {
-      setTitle(entry.title);
-      setContent(entry.content);
+      setTitle(entry.title || "");
+      setContent(entry.content || "");
       setTags(entry.tags || []);
       setIsFavorite(entry.isFavorite || false);
     } else if (template) {
@@ -47,7 +47,7 @@ export default function EntryPage() {
       setTags([]);
       setIsFavorite(false);
     }
-  }, [entry]);
+  }, [entry, template]);
 
   const createEntry = useMutation({
     mutationFn: async () => {
@@ -80,6 +80,7 @@ export default function EntryPage() {
       return res.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/entries/${params.id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
       toast({
         title: "Entry updated",
