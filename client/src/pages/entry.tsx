@@ -5,7 +5,6 @@ import { Editor } from "@/components/editor/Editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TagInput } from "@/components/ui/tag-input";
-import { MoodSelector } from "@/components/ui/mood-selector";
 import { Star } from "lucide-react";
 import { VoiceInput } from "@/components/ui/voice-input";
 import { useToast } from "@/hooks/use-toast";
@@ -21,9 +20,6 @@ export default function EntryPage() {
   const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [mood, setMood] = useState<string | undefined>();
-  const [moodIntensity, setMoodIntensity] = useState<number>(3);
-  const [moodNotes, setMoodNotes] = useState("");
 
   // Load existing entry if editing
   const { data: entry } = useQuery<Entry>({
@@ -45,17 +41,11 @@ export default function EntryPage() {
       setContent(entry.content);
       setTags(entry.tags);
       setIsFavorite(entry.isFavorite);
-      setMood(entry.mood || undefined);
-      setMoodIntensity(entry.moodIntensity || 3);
-      setMoodNotes(entry.moodNotes || "");
     } else if (template) {
       setTitle("");
       setContent(template.content);
       setTags([]);
       setIsFavorite(false);
-      setMood(undefined);
-      setMoodIntensity(3);
-      setMoodNotes("");
     }
   }, [entry, template]);
 
@@ -66,9 +56,6 @@ export default function EntryPage() {
         content,
         tags,
         isFavorite,
-        mood,
-        moodIntensity,
-        moodNotes,
       });
       return res.json();
     },
@@ -89,9 +76,6 @@ export default function EntryPage() {
         content,
         tags,
         isFavorite,
-        mood,
-        moodIntensity,
-        moodNotes,
       });
       return res.json();
     },
@@ -111,12 +95,6 @@ export default function EntryPage() {
     } else {
       createEntry.mutate();
     }
-  };
-
-  const handleMoodChange = (values: { mood: string; moodIntensity: number; moodNotes: string }) => {
-    setMood(values.mood);
-    setMoodIntensity(values.moodIntensity);
-    setMoodNotes(values.moodNotes);
   };
 
   const isLoading = createEntry.isPending || updateEntry.isPending;
@@ -141,15 +119,6 @@ export default function EntryPage() {
           >
             <Star className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
           </Button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <MoodSelector
-            mood={mood}
-            moodIntensity={moodIntensity}
-            moodNotes={moodNotes}
-            onChange={handleMoodChange}
-          />
         </div>
 
         <TagInput tags={tags} onChange={setTags} />
