@@ -22,7 +22,7 @@ export function Editor({ content, onChange, className }: EditorProps) {
   });
 
   return (
-    <div className={`min-h-[300px] rounded-md border p-4 ${className}`}>
+    <div className={`min-h-[500px] rounded-md border p-4 ${className}`}>
       <EditorContent editor={editor} />
     </div>
   );
