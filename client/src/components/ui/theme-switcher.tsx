@@ -1,3 +1,4 @@
+
 import { Moon, Sun, Monitor } from "lucide-react";
 import {
   DropdownMenu,
@@ -8,6 +9,7 @@ import {
 import { Button } from "./button";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useEffect } from "react";
 
 type Theme = "light" | "dark" | "system";
 
@@ -43,6 +45,20 @@ export function ThemeSwitcher() {
       queryClient.invalidateQueries({ queryKey: ["/api/preferences"] });
     },
   });
+
+  useEffect(() => {
+    const theme = preferences?.theme || "system";
+    const root = document.documentElement;
+    
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else if (theme === "light") {
+      root.classList.remove("dark");
+    } else {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      prefersDark ? root.classList.add("dark") : root.classList.remove("dark");
+    }
+  }, [preferences?.theme]);
 
   const currentTheme = preferences?.theme || "system";
   const Icon = themes.find((t) => t.value === currentTheme)?.icon || Monitor;
