@@ -1,5 +1,4 @@
 
-import { createClient } from '@supabase/supabase-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from "@shared/schema";
@@ -17,8 +16,3 @@ const client = postgres(connectionString, {
 });
 
 export const db = drizzle(client, { schema });
-
-export const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_KEY || ''
-);
