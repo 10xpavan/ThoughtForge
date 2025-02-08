@@ -67,6 +67,7 @@
     --border: 0 0% 20%;
     --input: 0 0% 20%;
     --ring: 204 88% 53%;
+  }
 }
 
 @layer base {
