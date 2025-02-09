@@ -5,13 +5,17 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import EntryPage from "@/pages/entry";
+import { AuthProvider } from "./lib/auth";
+import { LoginPage } from "./pages/login";
+import { PrivateRoute } from "./components/PrivateRoute";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/new" component={EntryPage} />
-      <Route path="/entry/:id" component={EntryPage} />
+      <Route path="/login" component={LoginPage} />
+      <PrivateRoute path="/" component={Home} />
+      <PrivateRoute path="/new" component={EntryPage} />
+      <PrivateRoute path="/entry/:id" component={EntryPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -19,10 +23,12 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <Router />
+        <Toaster />
+      </QueryClientProvider>
+    </AuthProvider>
   );
 }
 

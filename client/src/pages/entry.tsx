@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import type { Entry } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/lib/auth";
+import { GoogleDriveService } from "@/lib/googleDrive";
 
 export default function EntryPage() {
   const params = useParams();
@@ -20,6 +22,8 @@ export default function EntryPage() {
   const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
+  const { googleDriveToken } = useAuth();
+  const driveService = new GoogleDriveService(googleDriveToken!);
 
   // Load existing entry if editing
   const { data: entry } = useQuery<Entry>({
@@ -51,19 +55,19 @@ export default function EntryPage() {
 
   const createEntry = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/entries", {
+      const fileId = await driveService.saveEntry({
         title,
         content,
         tags,
         isFavorite,
       });
-      return res.json();
+      return { id: fileId };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
       toast({
         title: "Entry saved",
-        description: "Your journal entry has been saved successfully.",
+        description: "Your journal entry has been saved to Google Drive.",
       });
       setLocation("/");
     },
