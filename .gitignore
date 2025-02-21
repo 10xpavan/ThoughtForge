@@ -1,4 +1,4 @@
-node_modules
++ server/config/google-drive-credentials.json
 dist
 .DS_Store
 server/public
@@ -7,3 +7,4 @@ vite.config.ts.*
 .env
 .env.local
 .env.production
+node_modules
