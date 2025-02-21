@@ -1,6 +1,6 @@
 import { type Entry, type InsertEntry, type Template, type UserPreferences, entries, templates, userPreferences, tags } from "@shared/schema";
 import { db } from "./db";
-import { eq, ilike, desc } from "drizzle-orm";
+import { eq, ilike, desc, or } from "drizzle-orm";
 
 export interface IStorage {
   // Entry operations
@@ -66,7 +66,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(entries)
       .where(ilike(entries.title, `%${query}%`))
-      .orWhere(ilike(entries.content, `%${query}%`))
+      .where(or(ilike(entries.title, `%${query}%`), ilike(entries.content, `%${query}%`)))
       .orderBy(desc(entries.createdAt));
   }
 
