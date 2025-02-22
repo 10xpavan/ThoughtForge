@@ -8,3 +8,4 @@ vite.config.ts.*
 .env.local
 .env.production
 node_modules
+server/config/google-drive-credentials.json.json
