@@ -2,6 +2,11 @@ import { google } from 'googleapis';
 
 const FOLDER_NAME = 'Journal Entries';
 
+export interface GoogleDriveService {
+  uploadFile: (title: string, content: string) => Promise<{ id: string }>;
+  shareFile: (fileId: string) => Promise<{ webViewLink: string }>;
+}
+
 export class GoogleDriveService {
   private drive;
   private folderId: string | null = null;

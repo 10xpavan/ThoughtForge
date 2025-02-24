@@ -7,6 +7,8 @@ import type { Entry } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import { GoogleDriveService } from "@/lib/googleDrive";
+import debounce from 'lodash/debounce';
+import { useSearchParams } from 'react-router-dom';
 
 export default function EntryPage() {
   const params = useParams();
@@ -14,6 +16,9 @@ export default function EntryPage() {
   const { toast } = useToast();
   const titleRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
+  
+  const [searchParams] = useSearchParams();
+  const [fileId, setFileId] = useState<string | null>(searchParams.get('fileId'));
   
   // State management with debouncing for rapid changes
   const [title, setTitle] = useState("");
@@ -48,7 +53,9 @@ export default function EntryPage() {
 
   const [showSaveIndicator, setShowSaveIndicator] = useState(false);
   const saveIndicatorTimeout = useRef<NodeJS.Timeout>();
-  const autosaveDelay = 5000; // Configurable autosave delay in ms
+  const [autoSaveDelay, setAutoSaveDelay] = useState(5000); // 5s default
+  const [showSaved, setShowSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Show save indicator for 2 seconds
   const showTemporarySaveIndicator = useCallback(() => {
@@ -78,7 +85,7 @@ export default function EntryPage() {
     title,
     content,
     driveService,
-    onSave: (id) => {
+    onSave: (id: string) => {
       setFileId(id);
       showTemporarySaveIndicator();
     },
@@ -90,7 +97,7 @@ export default function EntryPage() {
         showTemporarySaveIndicator();
       }
     },
-    debounceMs: autosaveDelay
+    debounceMs: autoSaveDelay
   });
 
   const shareEntry = useMutation({
@@ -106,8 +113,11 @@ export default function EntryPage() {
             title.trim() || "Untitled",
             content
           );
-          setFileId(uploadResponse.id);
-          return await driveService?.shareFile(uploadResponse.id);
+          if (uploadResponse?.id) {
+            setFileId(uploadResponse.id);
+            return await driveService?.shareFile(uploadResponse.id);
+          }
+          throw new Error("Upload failed");
         } catch (error) {
           throw new Error("Failed to save entry before sharing");
         }
@@ -197,37 +207,68 @@ export default function EntryPage() {
   };
 
   const isLoading = false; // createEntry.isPending;
-  const isSaving = autosaveStatus.isSaving;
   const isSharing = shareEntry.isPending;
+
+  // Save indicator helper
+  const showSavedIndicator = () => {
+    setShowSaved(true);
+    setTimeout(() => setShowSaved(false), 2000);
+  };
+
+  // Save function
+  const saveEntry = async () => {
+    if (isSaving) return;
+    
+    try {
+      setIsSaving(true);
+      const response = await fetch('/drive/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, content, fileId }),
+      });
+      
+      if (!response.ok) throw new Error('Save failed');
+      showSavedIndicator();
+    } catch (error) {
+      console.error('Save error:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Debounced autosave
+  const debouncedSave = useCallback(
+    debounce(saveEntry, autoSaveDelay),
+    [autoSaveDelay, title, content, fileId]
+  );
+
+  // Trigger autosave on content changes
+  useEffect(() => {
+    if (title || content) {
+      debouncedSave();
+    }
+    return () => debouncedSave.cancel();
+  }, [title, content, debouncedSave]);
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-8">
       <div className="w-full max-w-3xl space-y-8">
-        {/* Title Input */}
-        <input
-          ref={titleRef}
-          type="text"
-          placeholder="Title your thoughts..."
-          value={title}
-          onChange={handleTitleChange}
-          className="w-full bg-black text-white border border-white/20 focus:border-white p-6 text-2xl font-light 
-            placeholder:text-white/50 outline-none transition-colors focus:ring-0 focus:outline-none"
-        />
-
-        {/* Content Textarea */}
-        <textarea
-          ref={contentRef}
-          placeholder="Express yourself..."
-          value={content}
-          onChange={handleContentChange}
-          className="w-full min-h-[50vh] bg-black text-white border border-white/20 focus:border-white p-6 text-lg 
-            leading-relaxed font-light placeholder:text-white/50 outline-none resize-none transition-colors 
-            focus:ring-0 focus:outline-none [font-size:18px]"
-        />
-
-        <div className="space-y-4">
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-6">
+        {/* Header with controls */}
+        <div className="flex items-center justify-between">
+          <select
+            value={autoSaveDelay}
+            onChange={(e) => setAutoSaveDelay(Number(e.target.value))}
+            className="bg-black border border-white rounded px-2 py-1"
+          >
+            <option value={2000}>Autosave: 2s</option>
+            <option value={5000}>Autosave: 5s</option>
+            <option value={10000}>Autosave: 10s</option>
+          </select>
+          
+          <div className="flex items-center gap-4">
+            {showSaved && (
+              <span className="text-green-400">Saved</span>
+            )}
             <button
               onClick={() => {
                 if (content.trim()) {
@@ -264,16 +305,29 @@ export default function EntryPage() {
               </button>
             )}
           </div>
-
-          {/* Save Indicator */}
-          <div className="flex justify-end">
-            {showSaveIndicator && (
-              <div className="text-sm text-white/75 bg-black px-4 py-2 rounded transition-opacity duration-200">
-                Saved
-              </div>
-            )}
-          </div>
         </div>
+
+        {/* Title Input */}
+        <input
+          ref={titleRef}
+          type="text"
+          placeholder="Title your thoughts..."
+          value={title}
+          onChange={handleTitleChange}
+          className="w-full bg-black text-white border border-white/20 focus:border-white p-6 text-2xl font-light 
+            placeholder:text-white/50 outline-none transition-colors focus:ring-0 focus:outline-none"
+        />
+
+        {/* Content Textarea */}
+        <textarea
+          ref={contentRef}
+          placeholder="Express yourself..."
+          value={content}
+          onChange={handleContentChange}
+          className="w-full min-h-[50vh] bg-black text-white border border-white/20 focus:border-white p-6 text-lg 
+            leading-relaxed font-light placeholder:text-white/50 outline-none resize-none transition-colors 
+            focus:ring-0 focus:outline-none [font-size:18px]"
+        />
       </div>
     </div>
   );

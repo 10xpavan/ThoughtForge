@@ -2,6 +2,7 @@ import express from "express";
 import { google } from "googleapis";
 import { oauth2Client } from "../config/googleAuth";
 import { TokenError } from "../errors/TokenError";
+import { format } from 'date-fns';
 
 const router = express.Router();
 const drive = google.drive({ version: "v3", auth: oauth2Client });
@@ -40,10 +41,76 @@ function generateTimestampedFilename(title: string = 'Untitled'): string {
   return `${baseFileName}-${date}-${time}.txt`;
 }
 
+interface UploadRequest {
+  title: string;
+  content: string;
+  fileId?: string | null;
+}
+
+const MAX_RETRIES = 1;
+const RETRY_DELAY = 1000; // 1 second
+
+async function uploadToDrive(
+  auth: any, 
+  title: string, 
+  content: string, 
+  fileId?: string | null,
+  retryCount = 0
+): Promise<{ id: string }> {
+  const drive = google.drive({ version: 'v3', auth });
+  const timestamp = format(new Date(), 'yyyy-MM-dd-HHmm');
+  const fileName = `${title || 'Untitled'}-${timestamp}.txt`;
+
+  try {
+    if (fileId) {
+      // Update existing file
+      const response = await drive.files.update({
+        fileId,
+        media: {
+          mimeType: 'text/plain',
+          body: content,
+        },
+        requestBody: {
+          name: fileName,
+        },
+      });
+      return { id: fileId };
+    } else {
+      // Create new file
+      const response = await drive.files.create({
+        requestBody: {
+          name: fileName,
+          mimeType: 'text/plain',
+        },
+        media: {
+          mimeType: 'text/plain',
+          body: content,
+        },
+      });
+      
+      if (!response.data.id) {
+        throw new Error('No file ID returned from Drive API');
+      }
+      
+      return { id: response.data.id };
+    }
+  } catch (error) {
+    console.error(`Drive upload error (attempt ${retryCount + 1}):`, error);
+    
+    // Retry logic
+    if (retryCount < MAX_RETRIES) {
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+      return uploadToDrive(auth, title, content, fileId, retryCount + 1);
+    }
+    
+    throw error;
+  }
+}
+
 // API to upload journal entry to Google Drive
 router.post("/upload", async (req, res) => {
   const startTime = Date.now();
-  const { title, content } = req.body;
+  const { title, content, fileId } = req.body as UploadRequest;
 
   console.log(`[Drive Upload] Starting upload for "${title || 'Untitled'}" at ${new Date().toISOString()}`);
 
@@ -63,73 +130,8 @@ router.post("/upload", async (req, res) => {
       throw new TokenError('No Google Drive access token available');
     }
 
-    const filename = generateTimestampedFilename(title);
-    console.log(`[Drive Upload] Generated filename: ${filename}`);
-
-    const fileMetadata = {
-      name: filename,
-      mimeType: "text/plain",
-      description: `Journal entry: ${title || 'Untitled'}`,
-    };
-
-    const media = {
-      mimeType: "text/plain",
-      body: content.trim(),
-    };
-
-    // Attempt file upload with retry
-    let retryCount = 0;
-    const maxRetries = 2;
-    let lastError: Error | null = null;
-
-    while (retryCount <= maxRetries) {
-      try {
-        const file = await drive.files.create({
-          requestBody: fileMetadata,
-          media: media,
-          fields: "id,name,webViewLink,createdTime,description",
-        });
-
-        const duration = Date.now() - startTime;
-        console.log(`[Drive Upload] Success: "${filename}" uploaded in ${duration}ms`);
-        
-        return res.json({
-          success: true,
-          fileId: file.data.id,
-          fileName: file.data.name,
-          webViewLink: file.data.webViewLink,
-          createdTime: file.data.createdTime,
-          description: file.data.description
-        });
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error('Unknown error');
-        
-        // Check if error is retryable (network issues, temporary server problems)
-        if (error instanceof Error && 
-            (error.message.includes('ECONNRESET') || 
-             error.message.includes('500') || 
-             error.message.includes('503'))) {
-          retryCount++;
-          if (retryCount <= maxRetries) {
-            console.log(`[Drive Upload] Retry ${retryCount}/${maxRetries} after error: ${error.message}`);
-            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Exponential backoff
-            continue;
-          }
-        }
-        
-        // Non-retryable error or max retries reached
-        throw new DriveUploadError(
-          'Failed to upload file to Google Drive', 
-          error
-        );
-      }
-    }
-
-    // If we get here, all retries failed
-    throw new DriveUploadError(
-      'Failed to upload file after multiple retries',
-      lastError
-    );
+    const result = await uploadToDrive(oauth2Client, title, content, fileId);
+    res.json(result);
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
