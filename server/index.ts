@@ -5,11 +5,18 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
-// Log environment variables to verify they're loaded
-console.log("Environment Check:", {
-  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? "✓" : "✗",
-  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? "✓" : "✗",
-  GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI ? "✓" : "✗"
+// Validate required environment variables
+const requiredEnvVars = {
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
+};
+
+// Check for missing variables
+Object.entries(requiredEnvVars).forEach(([key, value]) => {
+  if (!value) {
+    console.error(`Missing required environment variable: ${key}`);
+  }
 });
 
 const clientID = process.env.GOOGLE_CLIENT_ID;

@@ -18,7 +18,6 @@ export default function EntryPage() {
   // State management with debouncing for rapid changes
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [fileId, setFileId] = useState<string | null>(null);
   const { googleDriveToken } = useAuth();
   const driveService = googleDriveToken ? new GoogleDriveService(googleDriveToken) : null;
 
