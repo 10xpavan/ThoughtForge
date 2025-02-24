@@ -19,19 +19,24 @@ if (missingVars.length > 0) {
   );
 }
 
-// Create OAuth2 Client with environment variables
+// Create OAuth2 Client
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID!,
   process.env.GOOGLE_CLIENT_SECRET!,
   process.env.GOOGLE_REDIRECT_URI!
 );
 
-// Log configuration status (without exposing sensitive values)
-console.log("Google OAuth2 Configuration:", {
-  clientConfigured: !!process.env.GOOGLE_CLIENT_ID,
-  secretConfigured: !!process.env.GOOGLE_CLIENT_SECRET,
-  redirectConfigured: !!process.env.GOOGLE_REDIRECT_URI,
-  redirectUri: process.env.GOOGLE_REDIRECT_URI
+// Configure OAuth2 scopes
+const SCOPES = [
+  'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/drive.metadata.readonly'
+];
+
+// Generate auth URL
+const authUrl = oauth2Client.generateAuthUrl({
+  access_type: 'offline',
+  scope: SCOPES,
+  prompt: 'consent'
 });
 
-export { oauth2Client };
+export { oauth2Client, authUrl, SCOPES };
