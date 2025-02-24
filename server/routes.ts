@@ -2,8 +2,12 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertEntrySchema, insertTemplateSchema, updatePreferencesSchema } from "@shared/schema";
+import driveRoutes from "./routes/drive";
 
 export function registerRoutes(app: Express): Server {
+  // Register drive routes
+  app.use("/api/drive", driveRoutes);
+
   // Entry routes
   app.get("/api/entries", async (_req, res) => {
     const entries = await storage.getEntries();

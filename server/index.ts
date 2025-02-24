@@ -1,8 +1,16 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import * as dotenv from 'dotenv';
-dotenv.config();
+
+// Log environment variables to verify they're loaded
+console.log("Environment Check:", {
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? "✓" : "✗",
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? "✓" : "✗",
+  GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI ? "✓" : "✗"
+});
 
 const clientID = process.env.GOOGLE_CLIENT_ID;
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET;

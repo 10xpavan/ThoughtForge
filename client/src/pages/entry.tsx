@@ -5,7 +5,7 @@ import { Editor } from "@/components/editor/Editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TagInput } from "@/components/ui/tag-input";
-import { Star } from "lucide-react";
+import { Star, Share2 } from "lucide-react";
 import { VoiceInput } from "@/components/ui/voice-input";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
@@ -22,6 +22,7 @@ export default function EntryPage() {
   const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [fileId, setFileId] = useState<string | null>(null);
   const { googleDriveToken } = useAuth();
   const driveService = new GoogleDriveService(googleDriveToken!);
 
@@ -55,13 +56,14 @@ export default function EntryPage() {
 
   const createEntry = useMutation({
     mutationFn: async () => {
-      const fileId = await driveService.saveEntry({
+      const response = await driveService.saveEntry({
         title,
         content,
         tags,
         isFavorite,
       });
-      return { id: fileId };
+      setFileId(response.fileId); // Store the fileId
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
@@ -69,7 +71,6 @@ export default function EntryPage() {
         title: "Entry saved",
         description: "Your journal entry has been saved to Google Drive.",
       });
-      setLocation("/");
     },
   });
 
@@ -91,6 +92,29 @@ export default function EntryPage() {
         description: "Your journal entry has been updated successfully.",
       });
       setLocation("/");
+    },
+  });
+
+  const shareEntry = useMutation({
+    mutationFn: async () => {
+      if (!fileId) throw new Error("No file ID available");
+      const response = await apiRequest("POST", "/api/drive/share", { fileId });
+      const { webViewLink } = await response.json();
+      await navigator.clipboard.writeText(webViewLink);
+      return webViewLink;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Link copied!",
+        description: "The sharing link has been copied to your clipboard.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error sharing entry",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -142,6 +166,18 @@ export default function EntryPage() {
           >
             Cancel
           </Button>
+          {fileId && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => shareEntry.mutate()}
+              disabled={shareEntry.isPending}
+              className="border-white text-white hover:bg-white hover:text-black"
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Share Entry
+            </Button>
+          )}
           <Button
             size="sm"
             onClick={handleSubmit}

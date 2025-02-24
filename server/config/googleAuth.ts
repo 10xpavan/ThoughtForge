@@ -1,18 +1,37 @@
 import { google } from "googleapis";
-import fs from "fs";
-import path from "path";
 
-// Load Google Credentials from JSON file
-const credentialsPath = path.join(__dirname, "google-credentials.json");
+// Verify required environment variables
+const requiredEnvVars = {
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI
+};
 
-if (!fs.existsSync(credentialsPath)) {
-  throw new Error("Google credentials file is missing!");
+// Check for missing environment variables
+const missingVars = Object.entries(requiredEnvVars)
+  .filter(([, value]) => !value)
+  .map(([key]) => key);
+
+if (missingVars.length > 0) {
+  throw new Error(
+    `Missing required environment variables: ${missingVars.join(", ")}\n` +
+    "Please check your .env file and ensure all required variables are set."
+  );
 }
 
-const credentials = JSON.parse(fs.readFileSync(credentialsPath, "utf8"));
-const { client_id, client_secret, redirect_uris } = credentials.web;
+// Create OAuth2 Client with environment variables
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID!,
+  process.env.GOOGLE_CLIENT_SECRET!,
+  process.env.GOOGLE_REDIRECT_URI!
+);
 
-// Create OAuth2 Client
-const oauth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+// Log configuration status (without exposing sensitive values)
+console.log("Google OAuth2 Configuration:", {
+  clientConfigured: !!process.env.GOOGLE_CLIENT_ID,
+  secretConfigured: !!process.env.GOOGLE_CLIENT_SECRET,
+  redirectConfigured: !!process.env.GOOGLE_REDIRECT_URI,
+  redirectUri: process.env.GOOGLE_REDIRECT_URI
+});
 
 export { oauth2Client };
