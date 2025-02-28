@@ -1,6 +1,6 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 
-export function registerRoutes() {
+export function registerRoutes(app: express.Application) {
   const router = Router();
   
   // Add your routes here

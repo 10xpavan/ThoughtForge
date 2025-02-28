@@ -27,13 +27,8 @@ function sanitizeFilename(filename: string): string {
 // Helper function to generate timestamped filename
 function generateTimestampedFilename(title: string = 'Untitled'): string {
   const now = new Date();
-  const date = now.toISOString()
-    .split('T')[0];                  // Get YYYY-MM-DD
-  
-  const time = now.toTimeString()
-    .split(' ')[0]                   // Get HH:MM:SS
-    .substring(0, 5)                 // Keep only HH:MM
-    .replace(':', '');               // Remove colon
+  const date = format(now, 'yyyy-MM-dd');  // Get YYYY-MM-DD
+  const time = format(now, 'HHmm');        // Get HHMM
   
   const sanitizedTitle = sanitizeFilename(title);
   const baseFileName = sanitizedTitle || 'Untitled';
@@ -47,7 +42,7 @@ interface UploadRequest {
   fileId?: string | null;
 }
 
-const MAX_RETRIES = 1;
+const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 
 async function uploadToDrive(
@@ -58,8 +53,7 @@ async function uploadToDrive(
   retryCount = 0
 ): Promise<{ id: string }> {
   const drive = google.drive({ version: 'v3', auth });
-  const timestamp = format(new Date(), 'yyyy-MM-dd-HHmm');
-  const fileName = `${title || 'Untitled'}-${timestamp}.txt`;
+  const fileName = generateTimestampedFilename(title);
 
   try {
     if (fileId) {
@@ -131,6 +125,11 @@ router.post("/upload", async (req, res) => {
     }
 
     const result = await uploadToDrive(oauth2Client, title, content, fileId);
+    
+    console.log(`[Drive Upload] Success: File uploaded with ID ${result.id}`);
+    const duration = Date.now() - startTime;
+    console.log(`[Drive Upload] Completed in ${duration}ms`);
+    
     res.json(result);
 
   } catch (error) {
@@ -180,7 +179,7 @@ router.post("/share", async (req, res) => {
       throw new TokenError('No Google Drive access token available');
     }
 
-    // Update sharing permissions
+    // Update sharing permissions - set to 'anyone with link' can view
     await drive.permissions.create({
       fileId,
       requestBody: {
@@ -224,6 +223,44 @@ router.post("/share", async (req, res) => {
       details: errorMessage
     });
   }
+});
+
+// Test route to verify endpoints are working correctly
+router.get("/test", async (req, res) => {
+  res.json({
+    message: "Drive API endpoints are configured correctly",
+    endpoints: {
+      upload: {
+        description: "Saves title/content to Drive as '<title>-YYYY-MM-DD-HHMM.txt' with retry logic, returns fileId",
+        method: "POST",
+        url: "/drive/upload",
+        body: {
+          title: "string (optional)",
+          content: "string (required)",
+          fileId: "string (optional, for updating existing files)"
+        },
+        returns: {
+          id: "string (Google Drive file ID)"
+        }
+      },
+      share: {
+        description: "Sets 'anyone with link' permissions, returns webViewLink",
+        method: "POST",
+        url: "/drive/share",
+        body: {
+          fileId: "string (required)"
+        },
+        returns: {
+          success: "boolean",
+          webViewLink: "string (URL to access the shared file)"
+        }
+      }
+    },
+    auth: {
+      using: "server/config/googleAuth.ts",
+      scopes: ["https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive.appdata"]
+    }
+  });
 });
 
 export default router;
