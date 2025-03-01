@@ -1,31 +1,21 @@
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
+// Load environment variables at the very beginning
 dotenv.config();
 
 import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
-import { registerRoutes } from "./routes/index";
 import { setupVite, serveStatic, log } from "./vite";
 import driveRouter from './routes/drive';
+import authRouter from './routes/auth';
+import apiRouter from './routes/api';
+import session from 'express-session';
+import { createServer } from 'net';
 
-// Validate required environment variables
-const requiredEnvVars = {
-  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-  GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
-};
-
-// Check for missing variables
-Object.entries(requiredEnvVars).forEach(([key, value]) => {
-  if (!value) {
-    console.error(`Missing required environment variable: ${key}`);
-  }
-});
-
-const clientID = process.env.GOOGLE_CLIENT_ID;
-const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-const redirectURI = process.env.GOOGLE_REDIRECT_URI;
-
-console.log("Client ID:", clientID); // Check if it loads correctly
+// Log environment variables for debugging
+console.log("[Server] Environment variables:");
+console.log(`[Server] - NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+console.log(`[Server] - PORT: ${process.env.PORT || '5001'}`);
+console.log(`[Server] - GOOGLE_REDIRECT_URI: ${process.env.GOOGLE_REDIRECT_URI || 'Not set'}`);
 
 const app = express();
 
@@ -33,52 +23,65 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? process.env.CLIENT_URL 
+  origin: process.env.NODE_ENV === 'production'
+    ? process.env.CLIENT_URL
     : 'http://localhost:5173',
   credentials: true
 }));
 
-// Request logging middleware
-app.use((req, res, next) => {
-  const start = Date.now();
-  
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (req.path.startsWith("/api") || req.path.startsWith("/drive")) {
-      console.log(
-        `${req.method} ${req.path} ${res.statusCode} ${duration}ms`
-      );
-    }
-  });
-
-  next();
-});
+// Session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'thoughtforge-dev-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
 
 // Routes
 app.use('/drive', driveRouter);
 
-// Create router from registerRoutes
-const apiRouter = registerRoutes(app);
-app.use('/api', apiRouter);
+// Auth routes
+app.use('/api/auth', authRouter);
+console.log('[Server] Auth routes registered at /api/auth');
 
-// Error handling
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('Server error:', err);
-  const status = err.status || err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
-  
-  res.status(status).json({ 
-    error: message,
-    details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+// API routes
+app.use('/api', apiRouter);
+console.log('[Server] API routes registered at /api');
+
+// Root API response
+app.get('/', (req, res) => {
+  res.send('ThoughtForge API Server is running!');
+});
+
+// Error handling middleware
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error('[Server] Error:', err);
+  res.status(500).json({
+    error: 'Server Error',
+    message: process.env.NODE_ENV === 'production' ? 'An unexpected error occurred' : err.message,
+    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack
   });
 });
 
-// Start server
-const PORT = Number(process.env.PORT) || 5000;
-const server = app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
-});
+// Start the server with port fallback
+const startServer = async () => {
+  // Force port 5001 by default
+  const PORT = process.env.PORT || 5001;
+  
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log(`[Server] Running on port ${PORT}`);
+    console.log(`[Server] Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`[Server] API URL: http://localhost:${PORT}/api`);
+    console.log(`[Server] Auth URL: http://localhost:${PORT}/api/auth/login`);
+  });
+  
+  return server;
+};
+
+// Start the server
+const server = startServer();
 
 export default app;
