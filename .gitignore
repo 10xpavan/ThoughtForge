@@ -34,3 +34,6 @@ Thumbs.db
 server/config/google-drive-credentials.json
 vite.config.ts.*
 *.tar.gz
+
+# Temporary repositories
+temp_repo/
