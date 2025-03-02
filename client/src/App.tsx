@@ -19,6 +19,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<Home />} />
             <Route path="/new" element={<EntryPage />} />
+            <Route path="/entry" element={<EntryPage />} />
             <Route path="/entry/:id" element={<EntryPage />} />
             <Route path="*" element={<NotFound />} />
             {/* Add other routes later */}
